@@ -36,6 +36,10 @@ class Version extends Model
         'contents' => 'json',
     ];
 
+    protected $with = [
+        'versionable',
+    ];
+
     protected static function booted()
     {
         static::creating(function (Version $version) {
