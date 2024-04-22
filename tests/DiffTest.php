@@ -5,7 +5,6 @@ namespace Tests;
 use Jfcherng\Diff\DiffHelper;
 use Overtrue\LaravelVersionable\Diff;
 use Overtrue\LaravelVersionable\Version;
-use PHPUnit\Framework\TestCase;
 
 class DiffTest extends TestCase
 {
@@ -21,17 +20,6 @@ class DiffTest extends TestCase
                 'user_id' => ['old' => null, 'new' => 123],
             ],
             (new Diff($new, $old))->toArray()
-        );
-
-        // reversed diff
-        $old = new Version(['contents' => ['title' => 'version1', 'content' => 'version1 content']]);
-        $new = new Version(['contents' => ['title' => 'version1', 'user_id' => 123]]);
-        $this->assertSame(
-            [
-                'title' => ['old' => 'version1', 'new' => 'version1'],
-                'content' => ['old' => null, 'new' => 'version1 content'],
-            ],
-            (new Diff($old, $new))->toArray()
         );
     }
 

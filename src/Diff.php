@@ -13,11 +13,17 @@ use Jfcherng\Diff\DiffHelper;
 class Diff
 {
     public function __construct(
-        public Version $fromVersion,
-        public Version $toVersion,
-        public array $differOptions = [],
-        public array $renderOptions = []
+        public Version $newVersion,
+        public Version $oldVersion,
+        public array   $differOptions = [],
+        public array   $renderOptions = []
     ) {
+        // keep the old version always smaller than the new version
+        if ($this->oldVersion->created_at > $this->newVersion->created_at
+            || $this->oldVersion->id > $this->newVersion->id && $this->oldVersion->created_at > $this->newVersion->created_at
+        ) {
+            [$this->oldVersion, $this->newVersion] = [$this->newVersion, $this->oldVersion];
+        }
     }
 
     public function toArray(array $differOptions = [], array $renderOptions = []): array
@@ -61,26 +67,24 @@ class Diff
     }
 
     protected function getContents(): array {
-        if ($this->toVersion->versionable->getVersionStrategy() === VersionStrategy::DIFF) {
-            if ($this->toVersion->previousVersions()->get()->last()) {
-                $newContents = json_decode($this->toVersion->previousVersions()->get()->last()->getRawOriginal()['contents'], true);
-            } else {
-                $newContents = $this->toVersion->versionable()->firstVersion()->get()->first()->toArray();
-            };
+        $newContents = $this->newVersion->contents;
 
-            $oldContents = $this->fromVersion->contents;
+        // if the version strategy is DIFF, we need to merge the contents of all versions
+        // from v1 to v2, v2 to v3, ..., vn-1 to vn.
+        if ($this->newVersion->versionable?->getVersionStrategy() === VersionStrategy::DIFF) {
+            $oldContents = [];
+            // all versions before this version.
+            $versionsBeforeThis = $this->newVersion->previousVersions()->get();
 
-            $versionsBeforeThis = $this->toVersion->previousVersions()->get();
             foreach ($versionsBeforeThis as $version) {
                 if (! empty($version->contents)) {
-                    $newContents = array_merge($newContents, $version->contents);
+                    $oldContents = array_merge($oldContents, $version->contents);
                 }
             }
 
-            $newContents = Arr::only($newContents, array_keys($oldContents));
+            $oldContents = Arr::only($oldContents, array_keys($newContents));
         } else {
-            $oldContents = $this->fromVersion->contents;
-            $newContents = $this->toVersion->contents;
+            $oldContents = $this->oldVersion->contents;
         }
 
         return [$oldContents, $newContents];
@@ -96,9 +100,10 @@ class Diff
             $renderOptions = $this->renderOptions;
         }
 
-        list($oldContents, $newContents) = $this->getContents();
+        [$oldContents, $newContents] = $this->getContents();
 
         $diff = [];
+
         $createDiff = function ($key, $old, $new) use (&$diff, $renderer, $differOptions, $renderOptions) {
             if ($renderer) {
                 $old = is_string($old) ? $old : json_encode($old);
@@ -110,10 +115,10 @@ class Diff
         };
 
         foreach ($oldContents as $key => $value) {
-            $createDiff($key, Arr::get($newContents, $key), Arr::get($oldContents, $key));
+            $createDiff($key, Arr::get($oldContents, $key), Arr::get($newContents, $key));
         }
 
-        foreach (array_diff_key($oldContents, $newContents) as $key => $value) {
+        foreach (array_diff_key($newContents, $oldContents) as $key => $value) {
             $createDiff($key, null, $value);
         }
 
@@ -126,25 +131,28 @@ class Diff
             $differOptions = $this->differOptions;
         }
 
-        list($oldContents, $newContents) = $this->getContents();
+        [$oldContents, $newContents] = $this->getContents();
 
         $diffStats = new Collection;
 
-        foreach ($oldContents as $key => $value) {
-            if (! isset($newContents[$key])) {
+        foreach ($newContents as $key => $newContent) {
+            $oldContent = $oldContents[$key] ?? null;
+
+            if (! isset($oldContents[$key])) {
                 $diffStats->push([
-                    'inserted' => is_string($oldContents[$key])
-                        ? substr_count($oldContents[$key], "\n") + 1
+                    'inserted' => is_string($newContent)
+                        ? substr_count($newContent, "\n") + 1
                         : 1,
                     'deleted' => 0,
                     'unmodified' => 0,
                     'changedRatio' => 1,
                 ]);
-            } else if ($newContents[$key] !== $oldContents[$key]) {
+            } else if ($newContent !== $oldContent) {
                 $diffStats->push(
                     (new Differ(
-                        explode("\n", is_string($newContents[$key]) ? $newContents[$key] : json_encode($newContents[$key])),
-                        explode("\n", is_string($oldContents[$key]) ? $oldContents[$key] : json_encode($oldContents[$key])),
+                        explode("\n", is_string($oldContent) ? $oldContent : json_encode($oldContent)),
+                        explode("\n", is_string($newContent) ? $newContent : json_encode($newContent)),
+                        $differOptions,
                     ))->getStatistics()
                 );
             }
