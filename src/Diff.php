@@ -15,8 +15,8 @@ class Diff
     public function __construct(
         public Version $newVersion,
         public Version $oldVersion,
-        public array   $differOptions = [],
-        public array   $renderOptions = []
+        public array $differOptions = [],
+        public array $renderOptions = []
     ) {
         // keep the old version always smaller than the new version
         if ($this->oldVersion->created_at > $this->newVersion->created_at
@@ -66,7 +66,8 @@ class Diff
         return $this->render('SideBySide', $differOptions, $renderOptions);
     }
 
-    protected function getContents(): array {
+    protected function getContents(): array
+    {
         $newContents = $this->newVersion->contents;
 
         // if the version strategy is DIFF, we need to merge the contents of all versions
@@ -147,7 +148,7 @@ class Diff
                     'unmodified' => 0,
                     'changedRatio' => 1,
                 ]);
-            } else if ($newContent !== $oldContent) {
+            } elseif ($newContent !== $oldContent) {
                 $diffStats->push(
                     (new Differ(
                         explode("\n", is_string($oldContent) ? $oldContent : json_encode($oldContent)),
