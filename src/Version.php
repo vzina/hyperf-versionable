@@ -40,6 +40,16 @@ class Version extends Model
         'versionable',
     ];
 
+    public function getIncrementing()
+    {
+        return \config('versionable.uuid') ? false : parent::getIncrementing();
+    }
+
+    public function getKeyType()
+    {
+        return \config('versionable.uuid') ? 'string' : parent::getKeyType();
+    }
+
     protected static function booted()
     {
         static::creating(function (Version $version) {
