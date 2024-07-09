@@ -90,11 +90,12 @@ class FeatureTest extends TestCase
         $post = new Post(['title' => 'version1', 'content' => 'version1 content', 'user_id' => 1234]);
 
         // change strategy to snapshot
-        $post->setVersionStrategy(VersionStrategy::SNAPSHOT);
+        $post->setVersionStrategy(VersionStrategy::SNAPSHOT); // snapshot
 
-        $post->save();
+        $post->save(); // version 1
 
-        $post->update(['title' => 'version2']);
+        $post->update(['title' => 'version2']); // version 2
+
         $post->refresh();
 
         $this->assertCount(2, $post->versions);

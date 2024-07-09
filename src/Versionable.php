@@ -86,8 +86,9 @@ trait Versionable
         /**
          * As initial version should include all $versionable fields,
          * we need to get the latest version from database.
+         * so we force to create a snapshot version.
          */
-        $attributes = $refreshedModel->getSnapshotAttributes();
+        $attributes = $refreshedModel->getVersionableAttributes(VersionStrategy::SNAPSHOT);
 
         return Version::createForModel($refreshedModel, $attributes, $refreshedModel->updated_at);
     }
@@ -181,7 +182,7 @@ trait Versionable
             return $this->forceRemoveVersions($ids);
         }
 
-        return $this->versions()->find($ids)->each->delete();
+        return $this->versions()->findMany($ids)->each->delete();
     }
 
     public function removeVersion(int $id)
@@ -224,32 +225,26 @@ trait Versionable
             return call_user_func([$this, 'shouldVersioning']);
         }
 
-        if ($this->versions()->count() === 0 || Arr::hasAny($this->getDirty(), array_keys($this->getVersionableAttributes()))) {
-            return true;
-        }
+        $versionableAttributes = $this->getVersionableAttributes($this->getVersionStrategy());
 
-        return false;
+        return $this->versions()->count() === 0 || Arr::hasAny($this->getDirty(), array_keys($versionableAttributes));
     }
 
-    public function getVersionableAttributes(array $replacements = []): array
-    {
-        return match ($this->getVersionStrategy()) {
-            VersionStrategy::DIFF => $this->getDiffAttributes($replacements),
-            VersionStrategy::SNAPSHOT => $this->getSnapshotAttributes($replacements),
-        };
-    }
-
-    protected function getDiffAttributes(array $replacements = []): array
-    {
-        return array_merge($this->getDirty(), $replacements);
-    }
-
-    protected function getSnapshotAttributes(array $replacements = []): array
+    public function getVersionableAttributes(VersionStrategy $strategy, array $replacements = []): array
     {
         $versionable = $this->getVersionable();
         $dontVersionable = $this->getDontVersionable();
 
-        $attributes = count($versionable) > 0 ? $this->only($versionable) : $this->attributesToArray();
+        $attributes = match ($strategy) {
+            VersionStrategy::DIFF => $this->getDirty(),
+            // To avoid some attributes are empty (not sync to database)
+            // we should get the latest version from database.
+            VersionStrategy::SNAPSHOT => $this->newQueryWithoutScopes()->find($this->getKey())?->attributesToArray() ?? [],
+        };
+
+        if (count($versionable) > 0) {
+            $attributes = Arr::only($attributes, $versionable);
+        }
 
         return Arr::except(array_merge($attributes, $replacements), $dontVersionable);
     }
@@ -294,7 +289,12 @@ trait Versionable
 
     public function getVersionStrategy(): VersionStrategy
     {
-        return \property_exists($this, 'versionStrategy') ? $this->versionStrategy : VersionStrategy::DIFF;
+        if (\property_exists($this, 'versionStrategy')) {
+            return $this->versionStrategy instanceof VersionStrategy ? $this->versionStrategy : VersionStrategy::from($this->versionStrategy);
+        }
+
+        // TODO: set default strategy to SNAPSHOT at 6.x
+        return VersionStrategy::DIFF;
     }
 
     /**
