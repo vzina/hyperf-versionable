@@ -89,7 +89,7 @@ class Version extends Model
         $versionConnection = $model->getConnectionName();
         $userForeignKeyName = $model->getUserForeignKeyName();
 
-        $version = new $versionClass();
+        $version = new $versionClass;
         $version->setConnection($versionConnection);
 
         $version->versionable_id = $model->getKey();
@@ -184,7 +184,7 @@ class Version extends Model
     public function diff(?Version $toVersion = null, array $differOptions = [], array $renderOptions = []): Diff
     {
         if (! $toVersion) {
-            $toVersion = $this->previousVersion() ?? new static();
+            $toVersion = $this->previousVersion() ?? new static;
         }
 
         return new Diff($this, $toVersion, $differOptions, $renderOptions);

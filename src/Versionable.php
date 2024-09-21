@@ -63,7 +63,6 @@ trait Versionable
 
     /**
      * @param  string|\DateTimeInterface|null  $time
-     * @return ?Version
      *
      * @throws \Carbon\Exceptions\InvalidFormatException
      */
@@ -136,7 +135,6 @@ trait Versionable
      *
      * @param  string|\DateTimeInterface|null  $time
      * @param  \DateTimeZone|string|null  $tz
-     * @return ?\Overtrue\LaravelVersionable\Version
      *
      * @throws \Carbon\Exceptions\InvalidFormatException
      */
