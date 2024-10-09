@@ -77,7 +77,7 @@ class Diff
             // all versions before this version.
             $versionsBeforeThis = $this->newVersion->previousVersions()->get();
 
-            foreach ($versionsBeforeThis as $version) {
+            foreach ($versionsBeforeThis->reverse() as $version) {  // DIFF show previous and current updated data  
                 if (! empty($version->contents)) {
                     $oldContents = array_merge($oldContents, $version->contents);
                 }
