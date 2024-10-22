@@ -194,6 +194,18 @@ class FeatureTest extends TestCase
         $this->assertNull($post->latestVersion->previousVersion()->previousVersion()->previousVersion());
     }
 
+    public function user_can_detect_whether_the_version_is_the_latest_version(): void
+    {
+        $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
+        $post->update(['title' => 'version2']);
+        $post->update(['title' => 'version3']);
+
+        $post->refresh();
+
+        $this->assertTrue($post->latestVersion->isLatest());
+        $this->assertFalse($post->latestVersion->previousVersion()->isLatest());
+    }
+
     /**
      * @test
      */
