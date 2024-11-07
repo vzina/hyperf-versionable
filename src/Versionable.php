@@ -68,6 +68,9 @@ trait Versionable
      */
     public function createVersion(array $replacements = [], $time = null): ?Version
     {
+        // get unsaved versionable attributes
+        $replacements = array_merge($this->getDirty(), $replacements);
+
         if ($this->shouldBeVersioning() || ! empty($replacements)) {
             return tap(Version::createForModel($this, $replacements, $time), function () {
                 $this->removeOldVersions($this->getKeepVersionsCount());
@@ -240,13 +243,17 @@ trait Versionable
     {
         $versionable = $this->getVersionable();
         $dontVersionable = $this->getDontVersionable();
+        $refreshedModel = static::query()->withoutGlobalScopes()->findOrFail($this->getKey());
 
-        $attributes = match ($strategy) {
-            VersionStrategy::DIFF => $this->getDirty(),
+        $keys = match ($strategy) {
+            VersionStrategy::DIFF => array_keys($this->getDirty()),
             // To avoid some attributes are empty (not sync to database)
             // we should get the latest version from database.
-            VersionStrategy::SNAPSHOT => $this->newQueryWithoutScopes()->find($this->getKey())?->attributesToArray() ?? [],
+            VersionStrategy::SNAPSHOT => array_keys($refreshedModel?->attributesToArray() ?? []),
         };
+
+        // get the original attributes to avoid the attributes that are castable.
+        $attributes = Arr::only($refreshedModel->getRawOriginal(), $keys);
 
         if (count($versionable) > 0) {
             $attributes = Arr::only($attributes, $versionable);

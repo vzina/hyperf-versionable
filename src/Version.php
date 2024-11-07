@@ -114,6 +114,7 @@ class Version extends Model
     public function revertWithoutSaving(): ?Model
     {
         $original = $this->versionable->getRawOriginal();
+
         switch ($this->versionable->getVersionStrategy()) {
             case VersionStrategy::DIFF:
                 // v1 + ... + vN

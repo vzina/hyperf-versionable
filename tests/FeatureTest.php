@@ -31,10 +31,19 @@ class FeatureTest extends TestCase
      */
     public function versions_can_be_created()
     {
-        $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
+        $post = Post::create(['title' => 'version1', 'content' => 'version1 content', 'extends' => ['foo' => 'bar']]);
 
         $this->assertCount(1, $post->versions);
         $this->assertDatabaseCount('versions', 1);
+
+        $version = $post->lastVersion;
+
+        $this->assertSame($post->title, $version->contents['title']);
+        $this->assertSame($post->content, $version->contents['content']);
+
+        // json cast
+        $this->assertIsString($version->contents['extends']);
+        $this->assertSame($post->getRawOriginal('extends'), $version->contents['extends']);
 
         // version2
         $post->update(['title' => 'version2']);
@@ -119,19 +128,26 @@ class FeatureTest extends TestCase
     public function it_can_revert_to_target_version()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
-        $post->update(['title' => 'version2', 'extends' => ['foo' => 'bar']]);
+        $post->update(['title' => 'version2', 'extends' => ['foo2' => 'bar2']]);
         $post->update(['title' => 'version3', 'content' => 'version3 content', 'extends' => ['name' => 'overtrue']]);
         $post->update(['title' => 'version4', 'content' => 'version4 content']);
 
         // #29
-        $version = $post->firstVersion;
-        $post = $version->revertWithoutSaving();
+        $version1 = $post->firstVersion;
+        $post = $version1->revertWithoutSaving();
 
         $this->assertSame('version1', $post->title);
         $this->assertSame('version1 content', $post->content);
         $this->assertNull($post->extends);
 
         $post->refresh();
+
+
+        $version2 = $post->firstVersion->nextVersion();
+        $this->assertSame('version2', $version2->contents['title']);
+        // only title updated
+        $this->assertNull($version2->contents['content'] ?? null);
+        $this->assertSame(json_encode(['foo2' => 'bar2']), $version2->contents['extends']);
 
         // revert version 2
         $post->revertToVersion($post->firstVersion->nextVersion()->id);
@@ -140,8 +156,7 @@ class FeatureTest extends TestCase
         // only title updated
         $this->assertSame('version2', $post->title);
         $this->assertSame('version4 content', $post->content);
-
-        $this->assertSame(['foo' => 'bar'], $post->extends);
+        $this->assertSame(['foo2' => 'bar2'], $post->extends);
 
         // revert version 3
         $post->revertToVersion(3);
