@@ -247,19 +247,21 @@ class FeatureTest extends TestCase
 
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
         $post->update(['title' => 'version2']);
+        $post->refresh();
 
         $this->travelTo(Carbon::create(2022, 10, 2, 15, 0));
         $post->update(['title' => 'version5']);
-
         $post->refresh();
 
-        $post->title = 'version4';
-        $post->createVersion([], Carbon::create(2022, 10, 2, 14, 30));
-        $post->createVersion(['title' => 'version3'], Carbon::create(2022, 10, 2, 14, 0));
-
+        $this->travelTo(Carbon::create(2022, 10, 2, 14, 30));
+        $post->update(['title' => 'version4']);
         $post->refresh();
 
-        $this->assertEquals('version5', $post->title);
+        $this->travelTo( Carbon::create(2022, 10, 2, 14, 0));
+        $post->update(['title' => 'version3']);
+        $post->refresh();
+
+        $this->assertEquals('version3', $post->title);
         $this->assertEquals('version5', $post->latestVersion->contents['title']);
         $this->assertEquals('version4', $post->latestVersion->previousVersion()->contents['title']);
         $this->assertEquals('version3', $post->latestVersion->previousVersion()->previousVersion()->contents['title']);

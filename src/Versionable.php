@@ -68,9 +68,6 @@ trait Versionable
      */
     public function createVersion(array $replacements = [], $time = null): ?Version
     {
-        // get unsaved versionable attributes
-        $replacements = array_merge($this->getDirty(), $replacements);
-
         if ($this->shouldBeVersioning() || ! empty($replacements)) {
             return tap(Version::createForModel($this, $replacements, $time), function () {
                 $this->removeOldVersions($this->getKeepVersionsCount());
