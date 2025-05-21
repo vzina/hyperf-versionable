@@ -23,10 +23,7 @@ class VersionAtTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_find_version_at_specific_time()
+    public function test_it_can_find_version_at_specific_time()
     {
         $this->travelTo(Carbon::create(2022, 10, 1, 12, 0));
 
@@ -47,10 +44,7 @@ class VersionAtTest extends TestCase
         $this->assertEquals('version3', $post->versionAt('2022-10-03 10:00:00')->contents['title']);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_null_if_given_time_is_before_first_version()
+    public function test_it_returns_null_if_given_time_is_before_first_version()
     {
         $this->travelTo(Carbon::create(2022, 10, 1, 12, 0));
 
@@ -60,10 +54,7 @@ class VersionAtTest extends TestCase
         $this->assertEquals('version1', $post->versionAt('2022-10-01 12:00:00')->contents['title']);
     }
 
-    /**
-     * @test
-     */
-    public function it_returns_latest_version_if_given_time_is_in_future()
+    public function test_it_returns_latest_version_if_given_time_is_in_future()
     {
         $this->travelTo(Carbon::create(2022, 10, 1, 12, 0));
 

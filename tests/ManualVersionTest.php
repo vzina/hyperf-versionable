@@ -23,10 +23,7 @@ class ManualVersionTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /**
-     * @test
-     */
-    public function user_can_create_versions_manually()
+    public function test_user_can_create_versions_manually()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -46,10 +43,7 @@ class ManualVersionTest extends TestCase
         $this->assertEquals('version3', $post->latestVersion->contents['title']);
     }
 
-    /**
-     * @test
-     */
-    public function user_cannot_create_versions_manually_without_changes()
+    public function test_user_cannot_create_versions_manually_without_changes()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -63,10 +57,7 @@ class ManualVersionTest extends TestCase
         $this->assertCount(1, $post->refresh()->versions);
     }
 
-    /**
-     * @test
-     */
-    public function user_cannot_create_versions_manually_by_passing_attributes()
+    public function test_user_cannot_create_versions_manually_by_passing_attributes()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -84,10 +75,7 @@ class ManualVersionTest extends TestCase
         $this->assertEquals('version3', $post->latestVersion->contents['title']);
     }
 
-    /**
-     * @test
-     */
-    public function user_can_create_versions_manually_if_versioning_is_disabled()
+    public function test_user_can_create_versions_manually_if_versioning_is_disabled()
     {
         Post::disableVersioning();
 
@@ -104,10 +92,7 @@ class ManualVersionTest extends TestCase
         $this->assertEquals('version3', $post->latestVersion->contents['title']);
     }
 
-    /**
-     * @test
-     */
-    public function attributes_will_be_merged_in_snapshot_mode()
+    public function test_attributes_will_be_merged_in_snapshot_mode()
     {
         Post::disableVersioning();
 

@@ -26,10 +26,7 @@ class FeatureTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /**
-     * @test
-     */
-    public function versions_can_be_created()
+    public function test_versions_can_be_created()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content', 'extends' => ['foo' => 'bar']]);
 
@@ -54,10 +51,7 @@ class FeatureTest extends TestCase
         $this->assertDatabaseCount('versions', 2);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_create_version_with_diff_strategy()
+    public function test_it_can_create_version_with_diff_strategy()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content', 'user_id' => 1234]);
 
@@ -91,10 +85,7 @@ class FeatureTest extends TestCase
         $this->assertSame('version3', $post->lastVersion->contents['title']);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_create_version_with_snapshot_strategy()
+    public function test_it_can_create_version_with_snapshot_strategy()
     {
         $post = new Post(['title' => 'version1', 'content' => 'version1 content', 'user_id' => 1234]);
 
@@ -122,10 +113,7 @@ class FeatureTest extends TestCase
         $this->assertSame('version1 content', $post->lastVersion->contents['content']);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_revert_to_target_version()
+    public function test_it_can_revert_to_target_version()
     {
         Version::disableOrderingVersionsByTimestamp();
 
@@ -180,10 +168,7 @@ class FeatureTest extends TestCase
         Version::enableOrderingVersionsByTimestamp();
     }
 
-    /**
-     * @test
-     */
-    public function it_can_revert_to_target_version_using_diff_strategy()
+    public function test_it_can_revert_to_target_version_using_diff_strategy()
     {
         Version::disableOrderingVersionsByTimestamp();
 
@@ -203,29 +188,7 @@ class FeatureTest extends TestCase
         Version::enableOrderingVersionsByTimestamp();
     }
 
-    /**
-     * @test
-     */
-    public function it_can_revert_to_target_version_using_diff_strategy()
-    {
-        $post = Post::create(['title' => 'version1', 'content' => 'version1 content']); // v1
-        $post->update(['title' => 'version2']); // v2
-        $post->update(['content' => 'version3 content']); // v3
-
-        $version2 = $post->firstVersion->nextVersion();
-        $this->assertSame('version2', $version2->contents['title']);
-
-        $post->revertToVersion($version2->id);
-        $post->refresh();
-
-        $this->assertSame('version2', $post->title);
-        $this->assertSame('version1 content', $post->content);
-    }
-
-    /**
-     * @test
-     */
-    public function user_can_get_diff_of_version()
+    public function test_user_can_get_diff_of_version()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -237,10 +200,7 @@ class FeatureTest extends TestCase
         $this->assertSame(['title' => ['old' => 'version1', 'new' => 'version2']], $post->lastVersion->diff()->toArray());
     }
 
-    /**
-     * @test
-     */
-    public function user_can_get_previous_version()
+    public function test_user_can_get_previous_version()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
         $post->update(['title' => 'version2']);
@@ -266,10 +226,7 @@ class FeatureTest extends TestCase
         $this->assertFalse($post->latestVersion->previousVersion()->isLatest());
     }
 
-    /**
-     * @test
-     */
-    public function user_can_get_next_version()
+    public function test_user_can_get_next_version()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
         $post->update(['title' => 'version2']);
@@ -283,10 +240,7 @@ class FeatureTest extends TestCase
         $this->assertNull($post->firstVersion->nextVersion()->nextVersion()->nextVersion());
     }
 
-    /**
-     * @test
-     */
-    public function previous_versions_created_later_on_will_have_correct_order()
+    public function test_previous_versions_created_later_on_will_have_correct_order()
     {
 
         $this->travelTo(Carbon::create(2022, 10, 2, 14, 0));
@@ -316,10 +270,7 @@ class FeatureTest extends TestCase
         $this->assertNull($post->latestVersion->previousVersion()->previousVersion()->previousVersion()->previousVersion()->previousVersion());
     }
 
-    /**
-     * @test
-     */
-    public function user_can_get_ordered_history()
+    public function test_user_can_get_ordered_history()
     {
         Version::enableOrderingVersionsByTimestamp();
 
@@ -335,10 +286,7 @@ class FeatureTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
-    public function post_will_keep_versions()
+    public function test_post_will_keep_versions()
     {
         \config(['versionable.keep_versions' => 3]);
 
@@ -356,10 +304,7 @@ class FeatureTest extends TestCase
         $this->assertCount(0, $post->versions);
     }
 
-    /**
-     * @test
-     */
-    public function user_can_disable_version_control()
+    public function test_user_can_disable_version_control()
     {
         $post = new Post;
 
@@ -398,10 +343,7 @@ class FeatureTest extends TestCase
         $post->refresh();
     }
 
-    /**
-     * @test
-     */
-    public function versions_can_be_soft_delete_and_restore()
+    public function test_versions_can_be_soft_delete_and_restore()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -442,10 +384,7 @@ class FeatureTest extends TestCase
         $this->assertCount(2, $post->refresh()->versions);
     }
 
-    /**
-     * @test
-     */
-    public function init_version_should_include_all_versionable_attributes()
+    public function test_init_version_should_include_all_versionable_attributes()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -460,10 +399,7 @@ class FeatureTest extends TestCase
         $this->assertSame($post->content, $post->lastVersion->contents['content']);
     }
 
-    /**
-     * @test
-     */
-    public function versions_can_be_force_deleted()
+    public function test_versions_can_be_force_deleted()
     {
         $post = Post::create(['title' => 'version1', 'content' => 'version1 content']);
 
@@ -498,10 +434,7 @@ class FeatureTest extends TestCase
         $this->assertDatabaseCount('versions', 1);
     }
 
-    /**
-     * @test
-     */
-    public function relations_will_not_in_version_contents()
+    public function test_relations_will_not_in_version_contents()
     {
         $post = new Post;
 
@@ -518,10 +451,7 @@ class FeatureTest extends TestCase
         $this->assertArrayNotHasKey('user', $post->latestVersion->contents);
     }
 
-    /**
-     * @test
-     */
-    public function it_creates_initial_version_if_not_exists()
+    public function test_it_creates_initial_version_if_not_exists()
     {
         $post = new Post;
 
