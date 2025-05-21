@@ -34,7 +34,7 @@ class VersionWithUuidTest extends TestCase
         $this->assertIsString($version->id);
     }
 
-    public function testUuidGetVersion()
+    public function test_uuid_get_version()
     {
         $user = User::create(['name' => 'overtrue']);
         $this->actingAs($user);
@@ -42,16 +42,16 @@ class VersionWithUuidTest extends TestCase
         $post = Post::create(['title' => 'Hello world!', 'content' => 'Hello world!']);
         $original_version = $post->versions()->first();
 
-        //Confirms we are using UUID
+        // Confirms we are using UUID
         $this->assertIsString($original_version->id);
 
-        //Breaks in v5.3.2 and earlier.
+        // Breaks in v5.3.2 and earlier.
         $version = $post->getVersion($original_version->id);
 
         $this->assertEquals($original_version->id, $version->id);
     }
 
-    public function testUuidRestoreToVersion()
+    public function test_uuid_restore_to_version()
     {
         $user = User::create(['name' => 'overtrue']);
         $this->actingAs($user);
@@ -59,10 +59,10 @@ class VersionWithUuidTest extends TestCase
         $post = Post::create(['title' => 'Hello world!', 'content' => 'Hello world!']);
         $original_version = $post->versions()->first();
 
-        //Confirms we are using UUID
+        // Confirms we are using UUID
         $this->assertIsString($original_version->id);
 
-        //Update the Title to get a new version
+        // Update the Title to get a new version
         $post->update(['title' => 'A New World!']);
 
         $this->assertCount(2, $post->refresh()->versions);
@@ -70,14 +70,14 @@ class VersionWithUuidTest extends TestCase
         $new_version = $post->latestVersion;
         $this->assertNotEquals($new_version->id, $original_version->id);
 
-        //Breaks with v5.3.2
+        // Breaks with v5.3.2
         $post->revertToVersion($original_version->id);
 
         $this->assertCount(3, $post->refresh()->versions);
         $this->assertEquals('Hello world!', $post->title);
     }
 
-    public function testUuidRemoveVersion()
+    public function test_uuid_remove_version()
     {
         $user = User::create(['name' => 'overtrue']);
         $this->actingAs($user);
@@ -85,22 +85,22 @@ class VersionWithUuidTest extends TestCase
         $post = Post::create(['title' => 'Hello world!', 'content' => 'Hello world!']);
         $original_version = $post->versions()->first();
 
-        //Confirms we are using UUID
+        // Confirms we are using UUID
         $this->assertIsString($original_version->id);
 
-        //Update the Title to get a new version
+        // Update the Title to get a new version
         $post->update(['title' => 'A New World!']);
 
         $this->assertCount(2, $post->refresh()->versions);
 
-        //Breaks in v5.3.2 and earlier.
+        // Breaks in v5.3.2 and earlier.
         $post->removeVersion($original_version->id);
 
         $this->assertCount(1, $post->refresh()->versions);
 
     }
 
-    public function testUuidForceRemoveVersion()
+    public function test_uuid_force_remove_version()
     {
         $user = User::create(['name' => 'overtrue']);
         $this->actingAs($user);
@@ -108,21 +108,21 @@ class VersionWithUuidTest extends TestCase
         $post = Post::create(['title' => 'Hello world!', 'content' => 'Hello world!']);
         $original_version = $post->versions()->first();
 
-        //Confirms we are using UUID
+        // Confirms we are using UUID
         $this->assertIsString($original_version->id);
 
-        //Update the Title to get a new version
+        // Update the Title to get a new version
         $post->update(['title' => 'A New World!']);
 
         $this->assertCount(2, $post->refresh()->versions);
 
-        //Breaks in v5.3.2 and earlier.
+        // Breaks in v5.3.2 and earlier.
         $post->forceRemoveVersion($original_version->id);
 
         $this->assertCount(1, $post->refresh()->versions);
     }
 
-    public function testUuidRestoreTrashedVersion()
+    public function test_uuid_restore_trashed_version()
     {
         $user = User::create(['name' => 'overtrue']);
         $this->actingAs($user);
@@ -130,20 +130,20 @@ class VersionWithUuidTest extends TestCase
         $post = Post::create(['title' => 'Hello world!', 'content' => 'Hello world!']);
         $original_version = $post->versions()->first();
 
-        //Confirms we are using UUID
+        // Confirms we are using UUID
         $this->assertIsString($original_version->id);
 
-        //Update the Title to get a new version
+        // Update the Title to get a new version
         $post->update(['title' => 'A New World!']);
 
         $this->assertCount(2, $post->refresh()->versions);
 
-        //Breaks in v5.3.2 and earlier.
+        // Breaks in v5.3.2 and earlier.
         $post->removeVersion($original_version->id);
 
         $this->assertCount(1, $post->refresh()->versions);
 
-        //Breaks in v5.3.2 and earlier.
+        // Breaks in v5.3.2 and earlier.
         $post->restoreTrashedVersion($original_version->id);
 
         $this->assertCount(2, $post->refresh()->versions);

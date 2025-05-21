@@ -208,9 +208,9 @@ class FeatureTest extends TestCase
      */
     public function it_can_revert_to_target_version_using_diff_strategy()
     {
-        $post = Post::create(['title' => 'version1', 'content' => 'version1 content']); #v1
-        $post->update(['title' => 'version2']); #v2
-        $post->update(['content' => 'version3 content']); #v3
+        $post = Post::create(['title' => 'version1', 'content' => 'version1 content']); // v1
+        $post->update(['title' => 'version2']); // v2
+        $post->update(['content' => 'version3 content']); // v3
 
         $version2 = $post->firstVersion->nextVersion();
         $this->assertSame('version2', $version2->contents['title']);
