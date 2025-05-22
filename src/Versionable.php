@@ -290,7 +290,6 @@ trait Versionable
             return $this->versionStrategy instanceof VersionStrategy ? $this->versionStrategy : VersionStrategy::from($this->versionStrategy);
         }
 
-        // TODO: set default strategy to SNAPSHOT at 6.x
         return VersionStrategy::DIFF;
     }
 
@@ -324,7 +323,7 @@ trait Versionable
 
     public function getVersionUserId()
     {
-        return $this->getAttribute($this->getUserForeignKeyName()) ?? auth()->id();
+        return $this->getAttribute($this->getUserForeignKeyName()) ?? 0;
     }
 
     public function getKeepVersionsCount(): string

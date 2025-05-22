@@ -4,12 +4,12 @@ namespace Vzina\HyperfVersionable;
 
 
 use Carbon\Carbon;
+use Hyperf\Database\Model\Builder;
 use Hyperf\Database\Model\Events\Creating;
 use Hyperf\Database\Model\Relations\BelongsTo;
 use Hyperf\Database\Model\Relations\MorphMany;
 use Hyperf\Database\Model\Relations\MorphTo;
 use Hyperf\Database\Model\SoftDeletes;
-use Hyperf\Database\Query\Builder;
 use Hyperf\DbConnection\Model\Model;
 use Hyperf\Stringable\Str;
 use function class_uses;
@@ -29,14 +29,6 @@ class Version extends Model
     use SoftDeletes;
 
     protected array $guarded = [];
-
-    /**
-     * This property is used to determine whether the versions should be ordered by timestamp or not.
-     * This is useful when you want to create a version for a model with specific created_at timestamp.
-     *
-     * @link https://github.com/overtrue/laravel-versionable/pull/44
-     */
-    protected static bool $orderingVersionsByTimestamp = true;
 
     /**
      * @var array
@@ -62,7 +54,7 @@ class Version extends Model
     public function creating(Creating $event)
     {
         if (\config('versionable.uuid')) {
-            $this->{$this->getKeyName()} = $this->{$this->getKeyName()} ?: (string) Str::orderedUuid();
+            $this->{$this->getKeyName()} = $this->{$this->getKeyName()} ?: (string)Str::orderedUuid();
         }
     }
 
@@ -75,7 +67,7 @@ class Version extends Model
                 config('versionable.user_model'),
                 config('versionable.user_foreign_key')
             ),
-            fn ($relation) => $useSoftDeletes ? $relation->withTrashed() : $relation
+            fn($relation) => $useSoftDeletes ? $relation->withTrashed() : $relation
         );
     }
 
@@ -85,7 +77,7 @@ class Version extends Model
     }
 
     /**
-     * @param  string|\DateTimeInterface|null  $time
+     * @param string|\DateTimeInterface|null $time
      *
      * @throws \Carbon\Exceptions\InvalidFormatException
      */
@@ -145,7 +137,7 @@ class Version extends Model
         // apply the latest version
         if (! empty($this->contents)) {
             // get the original attributes for insert(not been casted)
-            $original = $this->versionable->getAttributesForInsert();
+            $original = $this->versionable->getAttributes();
             $this->versionable->setRawAttributes(array_merge($original, $this->contents));
         }
 
@@ -154,22 +146,12 @@ class Version extends Model
 
     public function scopeOrderOldestFirst(Builder $query): Builder
     {
-        // if the versionable model enabled ordering by timestamp
-        if (self::shouldOrderByTimestamp()) {
-            return $query->oldest()->oldest('id');
-        }
-
-        return $query->oldest('id');
+        return $query->oldest()->oldest('id');
     }
 
     public function scopeOrderLatestFirst(Builder $query): Builder
     {
-        // if the versionable model enabled ordering by timestamp
-        if (self::shouldOrderByTimestamp()) {
-            return $query->latest()->latest('id');
-        }
-
-        return $query->latest('id');
+        return $query->latest()->latest('id');
     }
 
     public function previousVersions(): MorphMany
@@ -215,43 +197,5 @@ class Version extends Model
         }
 
         return new Diff($this, $toVersion, $differOptions, $renderOptions);
-    }
-
-    /**
-     * @deprecated will remove at 6.0
-     */
-    public static function shouldOrderByTimestamp(): bool
-    {
-        return static::$orderingVersionsByTimestamp;
-    }
-
-    /**
-     * @deprecated will remove at 6.0
-     */
-    public static function withoutOrderingVersionsByTimestamp(callable $callback): void
-    {
-        $lastState = static::$orderingVersionsByTimestamp;
-
-        static::disableOrderingVersionsByTimestamp();
-
-        \call_user_func($callback);
-
-        static::$orderingVersionsByTimestamp = $lastState;
-    }
-
-    /**
-     * @deprecated will remove at 6.0
-     */
-    public static function disableOrderingVersionsByTimestamp(): void
-    {
-        static::$orderingVersionsByTimestamp = false;
-    }
-
-    /**
-     * @deprecated will remove at 6.0
-     */
-    public static function enableOrderingVersionsByTimestamp(): void
-    {
-        static::$orderingVersionsByTimestamp = true;
     }
 }

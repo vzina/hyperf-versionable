@@ -18,11 +18,6 @@ return [
     'version_model' => Vzina\HyperfVersionable\Version::class,
 
     /**
-     * The model class for user.
-     */
-    'user_model' => '\App\Models\User',
-
-    /**
      * Use uuid for version id.
      */
     'uuid' => false,
