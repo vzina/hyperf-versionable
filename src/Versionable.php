@@ -323,7 +323,7 @@ trait Versionable
 
     public function getVersionUserId()
     {
-        return $this->getAttribute($this->getUserForeignKeyName()) ?? 0;
+        return $this->getAttribute($this->getUserForeignKeyName()) ?? auth()->id();
     }
 
     public function getKeepVersionsCount(): string

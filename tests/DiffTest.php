@@ -3,9 +3,9 @@
 namespace Tests;
 
 use Jfcherng\Diff\DiffHelper;
-use Overtrue\LaravelVersionable\Diff;
-use Overtrue\LaravelVersionable\Version;
 
+use Vzina\HyperfVersionable\Diff;
+use Vzina\HyperfVersionable\Version;
 use function PHPUnit\Framework\assertTrue;
 
 class DiffTest extends TestCase

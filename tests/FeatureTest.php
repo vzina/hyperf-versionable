@@ -2,10 +2,11 @@
 
 namespace Tests;
 
-use Illuminate\Support\Carbon;
-use Overtrue\LaravelVersionable\Diff;
-use Overtrue\LaravelVersionable\Version;
-use Overtrue\LaravelVersionable\VersionStrategy;
+
+use Carbon\Carbon;
+use Vzina\HyperfVersionable\Diff;
+use Vzina\HyperfVersionable\Version;
+use Vzina\HyperfVersionable\VersionStrategy;
 
 class FeatureTest extends TestCase
 {

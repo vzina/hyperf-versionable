@@ -2,21 +2,8 @@
 
 namespace Tests;
 
-use Overtrue\LaravelVersionable\ServiceProvider;
-
-abstract class TestCase extends \Orchestra\Testbench\TestCase
+abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * Load package service provider.
-     *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return array
-     */
-    protected function getPackageProviders($app)
-    {
-        return [ServiceProvider::class];
-    }
-
     /**
      * Define environment setup.
      *

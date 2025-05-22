@@ -2,7 +2,8 @@
 
 namespace Tests;
 
-use Overtrue\LaravelVersionable\VersionStrategy;
+
+use Vzina\HyperfVersionable\VersionStrategy;
 
 class ManualVersionTest extends TestCase
 {

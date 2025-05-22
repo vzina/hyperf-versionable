@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 
 class VersionAtTest extends TestCase
 {

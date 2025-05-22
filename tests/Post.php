@@ -2,31 +2,29 @@
 
 namespace Tests;
 
-use Illuminate\Database\Eloquent\Model;
-use Overtrue\LaravelVersionable\Versionable;
-use Overtrue\LaravelVersionable\VersionStrategy;
+
+use Hyperf\Database\Model\Events\Saving;
+use Hyperf\DbConnection\Model\Model;
+use Vzina\HyperfVersionable\Versionable;
+use Vzina\HyperfVersionable\VersionStrategy;
 
 class Post extends Model
 {
     use Versionable;
 
-    protected $fillable = ['title', 'content', 'user_id', 'extends', 'not_versionable_field'];
+    protected array $fillable = ['title', 'content', 'user_id', 'extends', 'not_versionable_field'];
 
     protected $versionable = ['title', 'content', 'extends'];
 
     protected $versionStrategy = VersionStrategy::DIFF;
 
-    protected $casts = [
+    protected array $casts = [
         'extends' => 'array',
     ];
 
-    protected static function boot()
+    public function saving(Saving $event)
     {
-        parent::boot();
-
-        static::saving(function (Post $post) {
-            $post->user_id = \auth()->id();
-        });
+        $this->user_id = 1;
     }
 
     public function enableForceDeleteVersion()
