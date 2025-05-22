@@ -1,6 +1,6 @@
 <?php
 
-namespace Overtrue\LaravelVersionable;
+namespace Vzina\HyperfVersionable;
 
 enum VersionStrategy: string
 {

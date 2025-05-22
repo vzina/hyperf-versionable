@@ -1,23 +1,24 @@
 <?php
 
-namespace Overtrue\LaravelVersionable;
+namespace Vzina\HyperfVersionable;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
+use Carbon\Carbon;
+use Hyperf\Database\Model\Events\Creating;
+use Hyperf\Database\Model\Relations\BelongsTo;
+use Hyperf\Database\Model\Relations\MorphMany;
+use Hyperf\Database\Model\Relations\MorphTo;
+use Hyperf\Database\Model\SoftDeletes;
+use Hyperf\Database\Query\Builder;
+use Hyperf\DbConnection\Model\Model;
+use Hyperf\Stringable\Str;
 use function class_uses;
 use function config;
 use function in_array;
 use function tap;
 
 /**
- * @property Model|\Overtrue\LaravelVersionable\Versionable $versionable
+ * @property Model|Versionable $versionable
  * @property array $contents
  * @property int $id
  * @property Carbon $created_at
@@ -27,7 +28,7 @@ class Version extends Model
 {
     use SoftDeletes;
 
-    protected $guarded = [];
+    protected array $guarded = [];
 
     /**
      * This property is used to determine whether the versions should be ordered by timestamp or not.
@@ -40,11 +41,11 @@ class Version extends Model
     /**
      * @var array
      */
-    protected $casts = [
+    protected array $casts = [
         'contents' => 'json',
     ];
 
-    protected $with = [
+    protected array $with = [
         'versionable',
     ];
 
@@ -58,13 +59,11 @@ class Version extends Model
         return \config('versionable.uuid') ? 'string' : parent::getKeyType();
     }
 
-    protected static function booted()
+    public function creating(Creating $event)
     {
-        static::creating(function (Version $version) {
-            if (\config('versionable.uuid')) {
-                $version->{$version->getKeyName()} = $version->{$version->getKeyName()} ?: (string) Str::orderedUuid();
-            }
-        });
+        if (\config('versionable.uuid')) {
+            $this->{$this->getKeyName()} = $this->{$this->getKeyName()} ?: (string) Str::orderedUuid();
+        }
     }
 
     public function user(): ?BelongsTo
@@ -92,7 +91,7 @@ class Version extends Model
      */
     public static function createForModel(Model $model, array $replacements = [], $time = null): Version
     {
-        /* @var \Overtrue\LaravelVersionable\Versionable|Model $model */
+        /* @var Versionable|Model $model */
         $versionClass = $model->getVersionModel();
         $versionConnection = $model->getConnectionName();
         $userForeignKeyName = $model->getUserForeignKeyName();
@@ -136,7 +135,7 @@ class Version extends Model
                 break;
             case VersionStrategy::SNAPSHOT:
                 // v1 + vN
-                /** @var \Overtrue\LaravelVersionable\Version $initVersion */
+                /** @var Version $initVersion */
                 $initVersion = $this->versionable->versions()->first();
                 if (! empty($initVersion->contents)) {
                     $this->versionable->setRawAttributes(array_merge($original, $initVersion->contents));

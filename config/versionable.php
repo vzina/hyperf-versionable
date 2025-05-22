@@ -15,12 +15,12 @@ return [
     /*
      * The model class for store versions.
      */
-    'version_model' => \Overtrue\LaravelVersionable\Version::class,
+    'version_model' => Vzina\HyperfVersionable\Version::class,
 
     /**
      * The model class for user.
      */
-    'user_model' => \App\Models\User::class,
+    'user_model' => '\App\Models\User',
 
     /**
      * Use uuid for version id.

@@ -1,9 +1,10 @@
 <?php
 
-namespace Overtrue\LaravelVersionable;
+namespace Vzina\HyperfVersionable;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
+
+use Hyperf\Collection\Arr;
+use Hyperf\Collection\Collection;
 use Jfcherng\Diff\Differ;
 use Jfcherng\Diff\DiffHelper;
 
@@ -20,7 +21,7 @@ class Diff
     ) {
         // keep the old version always smaller than the new version
         if ($this->oldVersion->created_at > $this->newVersion->created_at
-            || $this->oldVersion->id > $this->newVersion->id && $this->oldVersion->created_at > $this->newVersion->created_at
+            || ($this->oldVersion->id > $this->newVersion->id && $this->oldVersion->created_at > $this->newVersion->created_at)
         ) {
             [$this->oldVersion, $this->newVersion] = [$this->newVersion, $this->oldVersion];
         }

@@ -1,15 +1,20 @@
 <?php
 
-namespace Overtrue\LaravelVersionable;
+namespace Vzina\HyperfVersionable;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
+use Hyperf\Collection\Arr;
+use Hyperf\Collection\Collection;
+use Hyperf\Database\Model\Events\Created;
+use Hyperf\Database\Model\Events\Deleted;
+use Hyperf\Database\Model\Events\Updated;
+use Hyperf\Database\Model\Events\Updating;
+use Hyperf\Database\Model\Relations\MorphMany;
+use Hyperf\Database\Model\Relations\MorphOne;
+use Hyperf\DbConnection\Model\Model;
 
 /**
- * @property \Illuminate\Database\Eloquent\Collection<\Overtrue\LaravelVersionable\Version> $versions
+ * @property Collection<Version> $versions
  */
 trait Versionable
 {
@@ -26,62 +31,48 @@ trait Versionable
     // public string $versionModel;
     // public string $userForeignKeyName;
 
-    public static function bootVersionable(): void
+    public function created(Created $event)
     {
-        static::created(function (Model $model) {
-            if (static::$versioning) {
-                // init version should include all $versionable fields.
-                /** @var \Overtrue\LaravelVersionable\Versionable|Model $model */
-                $model->createInitialVersion($model);
-            }
-        });
-
-        static::updating(function (Model $model) {
-            // ensure the initial version exists before updating
-            /** @var \Overtrue\LaravelVersionable\Versionable $model */
-            if (static::$versioning && $model->versions()->count() === 0) {
-                $model->createInitialVersion($model);
-            }
-        });
-
-        static::updated(function (Model $model) {
-            if (static::$versioning && $model->shouldBeVersioning()) {
-                /** @var \Overtrue\LaravelVersionable\Versionable $model */
-                return tap(Version::createForModel($model), function () use ($model) {
-                    $model->removeOldVersions($model->getKeepVersionsCount());
-                });
-            }
-        });
-
-        static::deleted(
-            function (Model $model) {
-                /* @var \Overtrue\LaravelVersionable\Versionable|\Overtrue\LaravelVersionable\Version$model */
-                if (method_exists($model, 'isForceDeleting') && $model->isForceDeleting()) {
-                    $model->forceRemoveAllVersions();
-                }
-            }
-        );
+        if (static::$versioning) {
+            // init version should include all $versionable fields.
+            /** @var Versionable|Model $model */
+            $model = $event->getModel();
+            $model->createInitialVersion($model);
+        }
     }
 
-    /**
-     * @deprecated will remove at 6.0
-     *
-     * @param  string|\DateTimeInterface|null  $time
-     *
-     * @throws \Carbon\Exceptions\InvalidFormatException
-     */
-    public function createVersion(array $replacements = [], $time = null): ?Version
+    public function updating(Updating $event)
     {
-        // get unsaved versionable attributes
-        $replacements = array_merge($this->getDirty(), $replacements);
+        // ensure the initial version exists before updating
+        /** @var Versionable|Model $model */
+        $model = $event->getModel();
+        if (static::$versioning && $model->versions()->count() === 0) {
+            $model->createInitialVersion($model);
+        }
+    }
 
-        if ($this->shouldBeVersioning() || ! empty($replacements)) {
-            return tap(Version::createForModel($this, $replacements, $time), function () {
-                $this->removeOldVersions($this->getKeepVersionsCount());
+    public function updated(Updated $event)
+    {
+        // ensure the initial version exists before updating
+        /** @var Versionable|Model $model */
+        $model = $event->getModel();
+        if (static::$versioning && $model->shouldBeVersioning()) {
+            /** @var Versionable $model */
+            return tap(Version::createForModel($model), function () use ($model) {
+                $model->removeOldVersions($model->getKeepVersionsCount());
             });
         }
+    }
 
-        return null;
+    public function deleted(Deleted $event)
+    {
+        // ensure the initial version exists before updating
+        /** @var Versionable|Model $model */
+        $model = $event->getModel();
+        /* @var Versionable|Version $model */
+        if (method_exists($model, 'isForceDeleting') && $model->isForceDeleting()) {
+            $model->forceRemoveAllVersions();
+        }
     }
 
     public function getRefreshedModel(Model $model): Model
@@ -91,7 +82,7 @@ trait Versionable
 
     public function createInitialVersion(Model $model): Version
     {
-        /** @var \Overtrue\LaravelVersionable\Versionable|Model $refreshedModel */
+        /** @var Versionable|Model $refreshedModel */
         $refreshedModel = $this->getRefreshedModel($model);
 
         /**
@@ -107,14 +98,6 @@ trait Versionable
     public function versions(): MorphMany
     {
         return $this->morphMany($this->getVersionModel(), 'versionable');
-    }
-
-    /**
-     * @deprecated will remove at 6.0
-     */
-    public function history()
-    {
-        return $this->latestVersions();
     }
 
     public function latestVersions()
@@ -160,14 +143,6 @@ trait Versionable
     public function getVersion(int|string $id): ?Version
     {
         return $this->versions()->find($id);
-    }
-
-    /**
-     * @deprecated use `getTrashedVersions` instead
-     */
-    public function getThrashedVersions()
-    {
-        return $this->getTrashedVersions();
     }
 
     public function getTrashedVersions()
@@ -355,22 +330,6 @@ trait Versionable
     public function getKeepVersionsCount(): string
     {
         return config('versionable.keep_versions', 0);
-    }
-
-    /**
-     * @deprecated will remove at 5.0
-     */
-    public function versionableFromArray(array $attributes): array
-    {
-        if (count($this->getVersionable()) > 0) {
-            return \array_intersect_key($attributes, array_flip($this->getVersionable()));
-        }
-
-        if (count($this->getDontVersionable()) > 0) {
-            return \array_diff_key($attributes, array_flip($this->getDontVersionable()));
-        }
-
-        return $attributes;
     }
 
     public static function getVersioning(): bool
