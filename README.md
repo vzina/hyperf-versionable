@@ -1,4 +1,4 @@
-# Laravel Versionable
+# Hyperf Versionable
 
 [![Build Status](https://github.com/overtrue/laravel-versionable/workflows/CI/badge.svg)](https://github.com/overtrue/laravel-versionable/actions)
 [![Latest Stable Version](https://poser.pugx.org/overtrue/laravel-versionable/v/stable.svg)](https://packagist.org/packages/overtrue/laravel-versionable)
@@ -14,7 +14,7 @@ version.
 ## Requirement
 
 1. PHP >= 8.1.0
-2. laravel/framework >= 9.0
+2. hyperf/framework >= 3.1
 
 ## Features
 
@@ -27,29 +27,29 @@ version.
 ## Installing
 
 ```shell
-composer require overtrue/laravel-versionable -vvv
+composer require vzina/hyperf-versionable -vvv
 ```
 
 First, publish the config file and migrations:
 
 ```bash
-php artisan vendor:publish --provider="Overtrue\LaravelVersionable\ServiceProvider"
+php bin/hyperf.php vendor:publish vzina/hyperf-versionable
 ```
 
 Then run this command to create a database migration:
 
 ```bash
-php artisan migrate
+php bin/hyperf.php migrate
 ```
 
 ## Usage
 
-Add `Overtrue\LaravelVersionable\Versionable` trait to the model and set versionable attributes:
+Add `Vzina\HyperfVersionable\Versionable` trait to the model and set versionable attributes:
 
 ```php
-use Overtrue\LaravelVersionable\Versionable;
+use Vzina\HyperfVersionable\Versionable;
 
-class Post extends Model
+class Post extends \Hyperf\DbConnection\Model\Model
 {
     use Versionable;
 
@@ -149,9 +149,9 @@ Post::withoutVersion(function () use ($post) {
 
 You can set the following different version policies through property `protected $versionStrategy`:
 
-- `Overtrue\LaravelVersionable\VersionStrategy::DIFF` - Version content will only contain changed attributes (default
+- `Vzina\HyperfVersionable\VersionStrategy::DIFF` - Version content will only contain changed attributes (default
   strategy).
-- `Overtrue\LaravelVersionable\VersionStrategy::SNAPSHOT` - Version content will contain all versionable attribute
+- `Vzina\HyperfVersionable\VersionStrategy::SNAPSHOT` - Version content will contain all versionable attribute
   values.
 
 ### Show diff between the two versions
@@ -160,7 +160,7 @@ You can set the following different version policies through property `protected
 $diff = $post->getVersion(1)->diff($post->getVersion(2));
 ```
 
-`$diff` is a object `Overtrue\LaravelVersionable\Diff`, it based
+`$diff` is a object `Vzina\HyperfVersionable\Diff`, it based
 on [jfcherng/php-diff](https://github.com/jfcherng/php-diff).
 
 You can render the diff to [many formats](https://github.com/jfcherng/php-diff#introduction), and all formats result
@@ -217,12 +217,12 @@ You can define `$versionModel` in a model, that used this trait to change the mo
 
 > **Note**
 >
-> Model MUST extend class `\Overtrue\LaravelVersionable\Version`;
+> Model MUST extend class `\Vzina\HyperfVersionable\Version`;
 
 ```php
 <?php
 
-class PostVersion extends \Overtrue\LaravelVersionable\Version
+class PostVersion extends \Vzina\HyperfVersionable\Version
 {
     //
 }
@@ -234,8 +234,8 @@ Update the model attribute `$versionModel`:
 <?php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Overtrue\LaravelVersionable\Versionable;
+use Hyperf\DbConnection\Model\Model;
+use Vzina\HyperfVersionable\Versionable;
 
 class Post extends Model
 {
