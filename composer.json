@@ -4,6 +4,7 @@
     "require": {
         "php": "^8.1",
         "hyperf/db-connection": "~3.1.0",
+        "hyperf/helper": "~3.1.0",
         "jfcherng/php-diff": "^6.11",
         "doctrine/dbal": "^3.8|^4.0",
         "96qbhy/hyperf-auth": "^3.1"
