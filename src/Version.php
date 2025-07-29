@@ -187,7 +187,7 @@ class Version extends Model
 
     public function isLatest(): bool
     {
-        return $this->getKey() === $this->versionable->latestVersion()->getKey();
+        return $this->getKey() === $this->versionable->latestVersion()->first()?->getKey();
     }
 
     public function diff(?Version $toVersion = null, array $differOptions = [], array $renderOptions = []): Diff

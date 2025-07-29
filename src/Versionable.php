@@ -70,7 +70,7 @@ trait Versionable
         /** @var Versionable|Model $model */
         $model = $event->getModel();
         /* @var Versionable|Version $model */
-        if (method_exists($model, 'isForceDeleting') && $model->isForceDeleting()) {
+        if (static::$versioning && method_exists($model, 'isForceDeleting') && $model->isForceDeleting()) {
             $model->forceRemoveAllVersions();
         }
     }
@@ -326,9 +326,9 @@ trait Versionable
         return $this->getAttribute($this->getUserForeignKeyName()) ?? auth()->id();
     }
 
-    public function getKeepVersionsCount(): string
+    public function getKeepVersionsCount(): int
     {
-        return config('versionable.keep_versions', 0);
+        return (int)config('versionable.keep_versions', 0);
     }
 
     public static function getVersioning(): bool
