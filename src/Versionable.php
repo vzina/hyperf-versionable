@@ -30,54 +30,25 @@ trait Versionable
     // Model MUST extend \Overtrue\LaravelVersionable\Version
     // public string $versionModel;
     // public string $userForeignKeyName;
-
-    public function created(Created $event)
-    {
-        if (static::$versioning) {
-            // init version should include all $versionable fields.
-            /** @var Versionable|Model $model */
-            $model = $event->getModel();
-            $model->createInitialVersion($model);
-        }
-    }
-
-    public function updating(Updating $event)
-    {
-        // ensure the initial version exists before updating
-        /** @var Versionable|Model $model */
-        $model = $event->getModel();
-        if (static::$versioning && $model->versions()->count() === 0) {
-            $model->createInitialVersion($model);
-        }
-    }
-
-    public function updated(Updated $event)
-    {
-        // ensure the initial version exists before updating
-        /** @var Versionable|Model $model */
-        $model = $event->getModel();
-        if (static::$versioning && $model->shouldBeVersioning()) {
-            /** @var Versionable $model */
-            return tap(Version::createForModel($model), function () use ($model) {
-                $model->removeOldVersions($model->getKeepVersionsCount());
-            });
-        }
-    }
-
-    public function deleted(Deleted $event)
-    {
-        // ensure the initial version exists before updating
-        /** @var Versionable|Model $model */
-        $model = $event->getModel();
-        /* @var Versionable|Version $model */
-        if (static::$versioning && method_exists($model, 'isForceDeleting') && $model->isForceDeleting()) {
-            $model->forceRemoveAllVersions();
-        }
-    }
-
     public function getRefreshedModel(Model $model): Model
     {
         return $model->newQueryWithoutScopes()->findOrFail($model->getKey());
+    }
+
+    /**
+     * @param  string|\DateTimeInterface|null  $time
+     *
+     * @throws \Carbon\Exceptions\InvalidFormatException
+     */
+    public function createVersion(array $replacements = [], $time = null)
+    {
+        if ($this->shouldBeVersioning() || ! empty($replacements)) {
+            return tap(Version::createForModel($this, $replacements, $time), function () {
+                $this->removeOldVersions($this->getKeepVersionsCount());
+            });
+        }
+
+        return null;
     }
 
     public function createInitialVersion(Model $model): Version
@@ -290,7 +261,7 @@ trait Versionable
             return $this->versionStrategy instanceof VersionStrategy ? $this->versionStrategy : VersionStrategy::from($this->versionStrategy);
         }
 
-        return VersionStrategy::DIFF;
+        return VersionStrategy::SNAPSHOT;
     }
 
     /**
@@ -336,15 +307,17 @@ trait Versionable
         return static::$versioning;
     }
 
-    public static function withoutVersion(callable $callback): void
+    public static function withoutVersion(callable $callback)
     {
         $lastState = static::$versioning;
 
         static::disableVersioning();
 
-        \call_user_func($callback);
+        $ret = \call_user_func($callback);
 
         static::$versioning = $lastState;
+
+        return $ret;
     }
 
     public static function disableVersioning(): void

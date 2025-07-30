@@ -21,7 +21,7 @@ class Diff
     ) {
         // keep the old version always smaller than the new version
         if ($this->oldVersion->created_at > $this->newVersion->created_at
-            || ($this->oldVersion->id > $this->newVersion->id && $this->oldVersion->created_at > $this->newVersion->created_at)
+            || $this->oldVersion->id > $this->newVersion->id
         ) {
             [$this->oldVersion, $this->newVersion] = [$this->newVersion, $this->oldVersion];
         }
@@ -86,7 +86,7 @@ class Diff
 
             $oldContents = Arr::only($oldContents, array_keys($newContents));
         } else {
-            $oldContents = $this->oldVersion->contents;
+            $oldContents = (array)$this->oldVersion->contents;
         }
 
         if ($stripTags) {

@@ -29,6 +29,9 @@ class ConfigProvider
                      ],
                 ],
             ],
+            'listeners' => [
+                Listener\ModelVersionableListener::class,
+            ],
             'publish' => [
                 [
                     'id' => 'config',
