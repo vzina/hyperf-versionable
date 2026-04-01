@@ -43,7 +43,8 @@ trait Versionable
     public function createVersion(array $replacements = [], $time = null)
     {
         if ($this->shouldBeVersioning() || ! empty($replacements)) {
-            return tap(Version::createForModel($this, $replacements, $time), function () {
+            $versionModel = $this->getVersionModel();
+            return tap($versionModel::createForModel($this, $replacements, $time), function () {
                 $this->removeOldVersions($this->getKeepVersionsCount());
             });
         }
@@ -63,7 +64,9 @@ trait Versionable
          */
         $attributes = $refreshedModel->getVersionableAttributes(VersionStrategy::SNAPSHOT);
 
-        return Version::createForModel($refreshedModel, $attributes, $refreshedModel->updated_at);
+        $versionModel = $this->getVersionModel();
+        
+        return $versionModel::createForModel($refreshedModel, $attributes, $refreshedModel->updated_at);
     }
 
     public function versions(): MorphMany
